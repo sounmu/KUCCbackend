@@ -1,6 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
+
+
+app = FastAPI()
 
 
 class Memo(BaseModel):
@@ -9,10 +12,32 @@ class Memo(BaseModel):
     content: str
 
 
+class Cal(BaseModel):
+    type: str
+    intA: int
+    intB: int
+
+
+@app.post("/calculate/")
+def calculate(operation: Cal):
+    if operation.type == "+":
+        result = operation.intA + operation.intB
+    elif operation.type == "-":
+        result = operation.intA - operation.intB
+    elif operation.type == "*":
+        result = operation.intA * operation.intB
+    elif operation.type == "/":
+        # 0으로 나누는 경우 예외 처리
+        if operation.intB == 0:
+            raise HTTPException(status_code=400, detail="Division by zero is not allowed")
+        result = operation.intA / operation.intB
+    else:
+        raise HTTPException(status_code=400, detail="Invalid operation type")
+
+    return {"result": result}
+
+
 memos = []
-
-
-app = FastAPI()
 
 
 @app.post("/memos/create")
